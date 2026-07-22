@@ -4,6 +4,8 @@ A custom Lovelace card for Home Assistant that turns a `person` entity into a li
 
 Built for my own dashboard, but every entity is passed in via config — nothing is hardcoded, so it drops into any dashboard.
 
+![Two avatar cards showing home state with a battery ring](docs/screenshot.png)
+
 ## Features
 
 - **State artwork** — different image for home / away / night / driving, with a fallback chain down to the person entity's own `entity_picture`.
