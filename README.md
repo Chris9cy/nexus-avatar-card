@@ -16,6 +16,8 @@ Built for my own dashboard, but every entity is passed in via config — nothing
 - **Tap-to-locate** — tap the caption to jump to a map view or open a link (e.g. a Life360/Google Maps deep link), tap the card itself for the entity's more-info dialog.
 - **Zero dependencies** — single vanilla-JS file, Shadow DOM, no build step.
 
+> **Note:** configuration is YAML-only — there's no visual editor form. When you add the card through the UI's card picker, it pre-fills a working `entity` via `getStubConfig` so you're not staring at an error, but you'll still edit the rest (tracker/life360/travel/images/etc.) as YAML.
+
 ## Installation
 
 ### HACS (custom repository)

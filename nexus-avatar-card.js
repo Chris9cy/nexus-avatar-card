@@ -1,4 +1,10 @@
 class NexusAvatarCard extends HTMLElement {
+  static getStubConfig(hass) {
+    const person = hass && hass.states
+      ? Object.keys(hass.states).find(id => id.startsWith("person."))
+      : null;
+    return { entity: person || "person.example" };
+  }
   setConfig(config) {
     if (!config.entity) throw new Error("entity is required");
     this._c = config;
