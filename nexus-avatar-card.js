@@ -5,6 +5,9 @@ class NexusAvatarCard extends HTMLElement {
       : null;
     return { entity: person || "person.example" };
   }
+  static getConfigElement() {
+    return document.createElement("nexus-avatar-card-editor");
+  }
   setConfig(config) {
     if (!config.entity) throw new Error("entity is required");
     this._c = config;
@@ -181,6 +184,124 @@ img { width:100%; height:100%; object-fit:cover; display:block; transition: filt
     }
   }
 }
+class NexusAvatarCardEditor extends HTMLElement {
+  static get FIELDS() {
+    return [
+      { key: "entity", label: "Person (required)", selector: { entity: { domain: "person" } } },
+      { key: "name", label: "Display name" },
+      { key: "tracker", label: "Device tracker (for speed/driving)", selector: { entity: { domain: "device_tracker" } } },
+      { key: "life360", label: "Life360 tracker", selector: { entity: { domain: "device_tracker" } } },
+      { key: "location", label: "Location / place-name sensor", selector: { entity: { domain: "sensor" } } },
+      { key: "travel", label: "Travel-time sensor (e.g. Waze)", selector: { entity: { domain: "sensor" } } },
+      { key: "battery", label: "Battery sensor", selector: { entity: { domain: "sensor" } } },
+      { key: "link", label: "Tap-to-locate link or dashboard path" },
+    ];
+  }
+  static get IMAGE_FIELDS() {
+    return [
+      { key: "home", label: "Home image URL" },
+      { key: "away", label: "Away image URL" },
+      { key: "night", label: "Night image URL" },
+      { key: "driving", label: "Driving image URL" },
+    ];
+  }
+  setConfig(config) {
+    this._config = { ...config };
+    this._render();
+  }
+  set hass(hass) {
+    this._hass = hass;
+    this._applyHass();
+  }
+  connectedCallback() {
+    this._render();
+  }
+  _render() {
+    if (!this._config) return;
+    if (!this.shadowRoot) this.attachShadow({ mode: "open" });
+    if (!this._built) {
+      this._built = true;
+      this.shadowRoot.innerHTML = `
+<style>
+:host { display:block; }
+.row { margin-bottom:12px; }
+.section-title { font-weight:600; font-size:14px; margin:16px 0 8px; opacity:.8; }
+ha-selector, ha-textfield { display:block; width:100%; }
+</style>
+<div id="main"></div>`;
+      const main = this.shadowRoot.getElementById("main");
+      NexusAvatarCardEditor.FIELDS.forEach((f) => {
+        const row = document.createElement("div");
+        row.className = "row";
+        row.appendChild(this._buildField(f.key, f.label, f.selector));
+        main.appendChild(row);
+      });
+      const title = document.createElement("div");
+      title.className = "section-title";
+      title.textContent = "State images (optional)";
+      main.appendChild(title);
+      NexusAvatarCardEditor.IMAGE_FIELDS.forEach((f) => {
+        const row = document.createElement("div");
+        row.className = "row";
+        row.appendChild(this._buildField(f.key, f.label, null, true));
+        main.appendChild(row);
+      });
+    }
+    this._syncValues();
+    this._applyHass();
+  }
+  _buildField(key, label, selector, isImage) {
+    let el;
+    if (selector) {
+      el = document.createElement("ha-selector");
+      el.selector = selector;
+      el.label = label;
+      el.addEventListener("value-changed", (e) => {
+        e.stopPropagation();
+        this._update(key, e.detail.value, isImage);
+      });
+    } else {
+      el = document.createElement("ha-textfield");
+      el.label = label;
+      el.addEventListener("input", (e) => this._update(key, e.target.value, isImage));
+    }
+    if (isImage) el.dataset.imgKey = key;
+    else el.dataset.key = key;
+    return el;
+  }
+  _syncValues() {
+    NexusAvatarCardEditor.FIELDS.forEach((f) => {
+      const el = this.shadowRoot.querySelector(`[data-key="${f.key}"]`);
+      if (el) el.value = this._config[f.key] || "";
+    });
+    const images = this._config.images || {};
+    NexusAvatarCardEditor.IMAGE_FIELDS.forEach((f) => {
+      const el = this.shadowRoot.querySelector(`[data-img-key="${f.key}"]`);
+      if (el) el.value = images[f.key] || "";
+    });
+  }
+  _applyHass() {
+    if (!this.shadowRoot || !this._hass) return;
+    this.shadowRoot.querySelectorAll("ha-selector").forEach((el) => { el.hass = this._hass; });
+  }
+  _update(key, value, isImage) {
+    if (key === "entity" && !value) return;
+    const next = { ...this._config };
+    if (isImage) {
+      const images = { ...(next.images || {}) };
+      if (value) images[key] = value; else delete images[key];
+      if (Object.keys(images).length) next.images = images; else delete next.images;
+    } else if (value) {
+      next[key] = value;
+    } else {
+      delete next[key];
+    }
+    this._config = next;
+    this.dispatchEvent(new CustomEvent("config-changed", { detail: { config: next }, bubbles: true, composed: true }));
+  }
+}
+customElements.define("nexus-avatar-card-editor", NexusAvatarCardEditor);
+
 customElements.define("nexus-avatar-card", NexusAvatarCard);
 window.customCards = window.customCards || [];
 window.customCards.push({ type: "nexus-avatar-card", name: "Nexus Avatar Card", description: "Living presence avatar: state artwork, battery ring, breathing glow, 3D sway, Life360 driving, places, dwell, Waze ETA, tap-to-locate" });
