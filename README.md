@@ -44,7 +44,7 @@ Built for my own dashboard, but every entity is passed in via config — nothing
 | `tracker` | | A `device_tracker.*` entity (e.g. the phone's own GPS tracker). Used for speed-based driving detection and as an extra "in the home zone" signal. |
 | `life360` | | A Life360 `device_tracker.*` entity. Preferred source for driving detection (`driving` attribute) and speed, since it's more authoritative than raw GPS. |
 | `location` | | A sensor whose state is a human-readable place name (e.g. reverse-geocoded address) and which may expose `at_loc_since` (dwell time) and/or `map_link`. |
-| `travel` | | A travel-time sensor (state = minutes, `distance` attribute = km) — e.g. a [Waze Travel Time](https://github.com/eifinger/sensor.waze_travel_time) sensor pointed at home. |
+| `travel` | | A travel-time sensor (state = minutes, `distance` attribute = km) — e.g. a [Waze Travel Time](https://github.com/eifinger/pywaze) sensor pointed at home. |
 | `battery` | | A battery-level sensor (0–100) for the charge ring. |
 | `link` | | Explicit URL or dashboard path for tap-to-locate. Overrides `location`'s `map_link` attribute if both are set. |
 | `images.home` | | Image URL shown when home (or arriving). |
